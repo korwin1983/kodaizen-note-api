@@ -26,12 +26,12 @@ class Note
      * @ORM\Column(type="string")
      * @Assert\NotBlank()
      * @Assert\Type("string")
+	 * @Assert\NotBlank()
      */
     protected $name;
 
     /**
      * @ORM\Column(type="string")
-     * @Assert\Length(min=10)
      * @Assert\Type("string")
      */
     protected $content;
