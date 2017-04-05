@@ -1,0 +1,11 @@
+app:
+    resource: "@AppBundle/Controller/DefaultController.php"
+    type:     annotation
+
+projects:
+    type:     rest
+    resource: AppBundle\Controller\ProjectController
+
+notes:
+    type: rest
+    resource: AppBundle\Controller\NoteController
