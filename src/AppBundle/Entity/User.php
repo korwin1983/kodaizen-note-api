@@ -4,6 +4,9 @@ namespace AppBundle\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
 
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+
 /**
  * User
  *
@@ -37,6 +40,11 @@ class User
 
     /**
      * @var string
+	 * @Assert\Email(
+	 *     message = "The email '{{ value }}' is not a valid email.",
+	 *     checkMX = true
+	 * )
+	 * @UniqueEntity("email")
      *
      * @ORM\Column(name="email", type="string", length=255, unique=true)
      */

@@ -9,3 +9,7 @@ projects:
 notes:
     type: rest
     resource: AppBundle\Controller\NoteController
+
+users:
+    type: rest
+    resource: AppBundle\Controller\UserController

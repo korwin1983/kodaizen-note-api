@@ -26,7 +26,6 @@ class Note
      * @ORM\Column(type="string")
      * @Assert\NotBlank()
      * @Assert\Type("string")
-	 * @Assert\NotBlank()
      */
     protected $name;
 
@@ -50,11 +49,6 @@ class Note
     {
         return $this->content;
     }
-
-//    public function setId()
-//    {
-//        return $this->id;
-//    }
 
     public function setName($name)
     {

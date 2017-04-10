@@ -15,3 +15,17 @@ AppBundle\Entity\Note:
         name:
             - NotBlank: ~
             - Type: string
+
+AppBundle\Entity\Note:
+    constraints:
+        - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: email
+    properties:
+        firstname:
+            - NotBlank: ~
+            - Type: string
+        lasttname:
+            - NotBlank: ~
+            - Type: string
+        email:
+            - NotBlank: ~
+            - Type: email
