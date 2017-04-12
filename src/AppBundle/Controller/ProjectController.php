@@ -16,12 +16,28 @@ class ProjectController extends Controller
 {
 
 
-	//update project
 	/**
 	 * @Rest\View()
 	 * @Rest\Put("/projects/{id}")
 	 */
-	public function putPlaceAction(Request $request)
+	public function updateProjectAction(Request $request)
+	{
+		return $this->updateProject($request, true);
+	}
+
+	/**
+	 * @Rest\View()
+	 * @Rest\Patch("/projects/{id}")
+	 */
+	public function patchProjectAction(Request $request)
+	{
+		return $this->updateProject($request, false);
+	}
+
+
+
+
+	private function updateProject(Request $request, $clearMissing)
 	{
 		$project = $this->get('doctrine.orm.entity_manager')
 			->getRepository('AppBundle:Project')
@@ -34,7 +50,7 @@ class ProjectController extends Controller
 
 		$form = $this->createForm(ProjectType::class, $project);
 
-		$form->submit($request->request->all());
+		$form->submit($request->request->all(), $clearMissing);
 
 		if ($form->isValid()) {
 			$em = $this->get('doctrine.orm.entity_manager');

@@ -12,6 +12,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  *
  * @ORM\Table(name="user")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
+ * @UniqueEntity("email")
  */
 class User
 {
@@ -44,9 +45,8 @@ class User
 	 *     message = "The email '{{ value }}' is not a valid email.",
 	 *     checkMX = true
 	 * )
-	 * @UniqueEntity("email")
-     *
      * @ORM\Column(name="email", type="string", length=255, unique=true)
+	 *
      */
     private $email;
 
