@@ -8,7 +8,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity()
- * @ORM\Table(name="notes")
+ * @ORM\Table(name="su_notes")
  * @UniqueEntity("name")
  */
 
@@ -17,21 +17,23 @@ class Note
 
     /**
      * @ORM\Id
-     * @ORM\Column(type="integer")
+     * @ORM\Column(type="integer", name="no_id")
      * @ORM\GeneratedValue
      */
     protected $id;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=false, unique=true, name="no_name")
      * @Assert\NotBlank()
+	 * @Assert\NotNull()
      * @Assert\Type("string")
      */
     protected $name;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", nullable=true)
      * @Assert\Type("string")
+	 *
      */
     protected $content;
 

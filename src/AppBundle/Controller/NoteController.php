@@ -24,7 +24,7 @@ class NoteController extends Controller
 	 */
 	public function updateNoteAction(Request $request)
 	{
-		return $this->updateNote($request, true);
+		return $this->updateNote($request, false);
 	}
 
 	/**
@@ -33,7 +33,7 @@ class NoteController extends Controller
 	 */
 	public function patchNoteAction(Request $request)
 	{
-		return $this->updateNote($request, false);
+		return $this->updateNote($request, true);
 	}
 
 
