@@ -87,40 +87,77 @@ class NoteController extends Controller
 	//add note
     /**
      * @Rest\View(statusCode=Response::HTTP_CREATED)
-     * @Rest\Post("/notes")
+     * @Rest\Post("projects/{id}/notes")
      */
     public function postNotesAction(Request $request)
     {
-    $note = new Note();
+//    $note = new Note();
+//
+//        $form = $this->createForm(NoteType::class, $note);
+//
+//        $form->submit($request->request->all()); // Validation des données
+//
+//        if ($form->isValid()) {
+//            $em = $this->get('doctrine.orm.entity_manager');
+//            $em->persist($note);
+//            $em->flush();
+//            return $note;
+//        } else {
+//            return $form;
+//        }
 
-        $form = $this->createForm(NoteType::class, $note);
+		$project = $this->get('doctrine.orm.entity_manager')
+			->getRepository('AppBundle:Project')
+			->find($request->get('id'));
+		/* @var $project Project */
 
-        $form->submit($request->request->all()); // Validation des données
+		if (empty($project)) {
+			return $this->projectNotFound();
+		}
 
-        if ($form->isValid()) {
-            $em = $this->get('doctrine.orm.entity_manager');
-            $em->persist($note);
-            $em->flush();
-            return $note;
-        } else {
-            return $form;
-        }
+		$note = new Note();
+		$note->setProject($project); // Ici, le projet est associé a la note
+		$form = $this->createForm(NoteType::class, $note);
+
+		// Le paramétre false dit à Symfony de garder les valeurs dans notre
+		// entité si l'utilisateur n'en fournit pas une dans sa requête
+		$form->submit($request->request->all());
+
+		if ($form->isValid()) {
+			$em = $this->get('doctrine.orm.entity_manager');
+			$em->persist($note);
+			$em->flush();
+			return $note;
+		} else {
+			return $form;
+		}
 
 
     }
 	//get all notes
     /**
      * @Rest\View()
-     * @Rest\Get("/notes")
+     * @Rest\Get("/projects/{id}/notes")
      */
     public function getNotesAction(Request $request)
     {
-        $notes = $this->get('doctrine.orm.entity_manager')
-            ->getRepository('AppBundle:Note')
-            ->findAll();
-        /* @var $notes Note[] */
+//        $notes = $this->get('doctrine.orm.entity_manager')
+//            ->getRepository('AppBundle:Note')
+//            ->findAll();
+//        /* @var $notes Note[] */
+//
+//        return $notes;
 
-        return $notes;
+		$project = $this->get('doctrine.orm.entity_manager')
+			->getRepository('AppBundle:Project')
+			->find($request->get('id')); // L'identifiant en tant que paramétre n'est plus nécessaire
+		/* @var $project Project */
+
+		if (empty($project)) {
+			return $this->projectNotFound();
+		}
+
+		return $project->getNotes();
     }
 
     //get note by id
@@ -142,5 +179,12 @@ class NoteController extends Controller
         return $note;
 
     }
+
+
+	private function projectNotFound()
+	{
+		return \FOS\RestBundle\View\View::create(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+	}
+
 }
 

@@ -27,6 +27,13 @@ class Project
      */
     protected $name;
 
+	/**
+	 * @ORM\OneToMany(targetEntity="Note", mappedBy="project")
+	 * @var Notes[]
+	 */
+    protected $notes;
+
+
     public function getId()
     {
         return $this->id;
@@ -49,6 +56,15 @@ class Project
         return $this;
     }
 
+	public function __construct()
+	{
+		$this->notes = new ArrayCollection();
+	}
+
+	public function getNotes()
+	{
+		return $this->notes;
+	}
 
 
 }
