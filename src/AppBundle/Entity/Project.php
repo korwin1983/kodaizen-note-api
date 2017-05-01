@@ -5,10 +5,13 @@ namespace AppBundle\Entity;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Doctrine\Common\Collections\ArrayCollection;
+use AppBundle\Entity\Note;
+
 
 /**
  * @ORM\Entity()
- * @ORM\Table(name="projects")
+ * @ORM\Table(name="su_projects")
  * @UniqueEntity("name")
  */
 
@@ -29,7 +32,7 @@ class Project
 
 	/**
 	 * @ORM\OneToMany(targetEntity="Note", mappedBy="project")
-	 * @var Notes[]
+	 * @var Note[]
 	 */
     protected $notes;
 

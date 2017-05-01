@@ -12,12 +12,13 @@ use FOS\RestBundle\View\View; // utilisation de la vue de FOSRestBundle
 use FOS\RestBundle\Controller\Annotations as Rest; //annotations pour FOSRestBundle
 use AppBundle\Form\Type\ProjectType;
 
+
 class ProjectController extends Controller
 {
 
 
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"project"})
 	 * @Rest\Put("/projects/{id}")
 	 */
 	public function updateProjectAction(Request $request)
@@ -26,7 +27,7 @@ class ProjectController extends Controller
 	}
 
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"project"})
 	 * @Rest\Patch("/projects/{id}")
 	 */
 	public function patchProjectAction(Request $request)
@@ -86,7 +87,7 @@ class ProjectController extends Controller
 
 	//add project
 	/**
-	 * @Rest\View(statusCode=Response::HTTP_CREATED)
+	 * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"project"})
 	 * @Rest\Post("/projects")
 	 */
 	public function postPlacesAction(Request $request)
@@ -109,7 +110,7 @@ class ProjectController extends Controller
 
 	//get all projects
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"project"})
 	 * @Rest\Get("/projects")
 	 */
 	public function getProjectsAction(Request $request)
@@ -127,7 +128,7 @@ class ProjectController extends Controller
 
 	//get project by id
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"project"})
 	 * @Rest\Get("/projects/{id}")
 	 */
 	public function getProjectAction($id, Request $request)
@@ -140,9 +141,7 @@ class ProjectController extends Controller
 		if (empty($project)) {
 			return new JsonResponse(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
 		}
-
 		return $project;
-
 	}
 
 }

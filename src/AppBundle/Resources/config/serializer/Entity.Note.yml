@@ -1,0 +1,12 @@
+# src/AppBundle/Resources/config/serializer/Entity.Note.yml
+AppBundle\Entity\Note:
+    exclusion_policy: none
+    properties:
+        id:
+            groups: ['project', 'note']
+        name:
+            groups: ['project', 'note']
+        content:
+            groups: ['project', 'note']
+        project:
+            groups: ['note']

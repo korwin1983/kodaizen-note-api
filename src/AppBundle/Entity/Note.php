@@ -37,6 +37,7 @@ class Note
 
 	/**
 	 * @ORM\ManyToOne(targetEntity="Project", inversedBy="notes")
+     * @ORM\JoinColumn(name="project_id", referencedColumnName="id", onDelete="CASCADE")
 	 * @var project
 	 */
 	protected $project;
