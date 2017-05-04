@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 class UserController extends Controller {
 	//add user
 	/**
-	 * @Rest\View(statusCode=Response::HTTP_CREATED)
+	 * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"user"})
 	 * @Rest\Post("/users")
 	 */
 	public function postUsersAction(Request $request)
@@ -25,6 +25,10 @@ class UserController extends Controller {
 		$form->submit($request->request->all()); // Validation des données
 
 		if ($form->isValid()) {
+            $encoder = $this->get('security.password_encoder');
+            // le mot de passe en claire est encodé avant la sauvegarde
+            $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
+            $user->setPassword($encoded);
 			$em = $this->get('doctrine.orm.entity_manager');
 			$em->persist($user);
 			$em->flush();
@@ -36,7 +40,7 @@ class UserController extends Controller {
 
 	//get all users
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"user"})
 	 * @Rest\Get("/users")
 	 */
 	public function getUsersAction(Request $request)
@@ -53,7 +57,7 @@ class UserController extends Controller {
 
 	//get user by id
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"user"})
 	 * @Rest\Get("/users/{id}")
 	 */
 	public function getUserAction($id, Request $request)
@@ -64,7 +68,7 @@ class UserController extends Controller {
 		/* @var $user User */
 
 		if (empty($user)) {
-			return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+            return $this->userNotFound();
 		}
 
 		return $user;
@@ -73,7 +77,7 @@ class UserController extends Controller {
 
 
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"user"})
 	 * @Rest\Put("/users/{id}")
 	 */
 	public function updateUserAction(Request $request)
@@ -82,7 +86,7 @@ class UserController extends Controller {
 	}
 
 	/**
-	 * @Rest\View()
+	 * @Rest\View(serializerGroups={"user"})
 	 * @Rest\Patch("/users/{id}")
 	 */
 	public function patchUserAction(Request $request)
@@ -101,14 +105,28 @@ class UserController extends Controller {
 		/* @var $user User */
 
 		if (empty($user)) {
-			return new JsonResponse(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+            return $this->userNotFound();
 		}
 
-		$form = $this->createForm(UserType::class, $user);
+        if ($clearMissing) { // Si une mise à jour complète, le mot de passe doit être validé
+            $options = ['validation_groups'=>['Default', 'FullUpdate']];
+        } else {
+            $options = []; // Le groupe de validation par défaut de Symfony est Default
+        }
+
+		$form = $this->createForm(UserType::class, $user, $options);
 
 		$form->submit($request->request->all(), $clearMissing);
 
 		if ($form->isValid()) {
+
+            // Si l'utilisateur veut changer son mot de passe
+            if (!empty($user->getPlainPassword())) {
+                $encoder = $this->get('security.password_encoder');
+                $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
+                $user->setPassword($encoded);
+            }
+
 			$em = $this->get('doctrine.orm.entity_manager');
 			// l'entité vient de la base, donc le merge n'est pas nécessaire.
 			// il est utilisé juste par soucis de clarté
@@ -139,6 +157,11 @@ class UserController extends Controller {
 		}
 	}
 
+
+    private function userNotFound()
+    {
+        return \FOS\RestBundle\View\View::create(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
+    }
 
 
 }

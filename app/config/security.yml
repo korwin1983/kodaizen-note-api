@@ -22,3 +22,10 @@ security:
 
             # http://symfony.com/doc/current/cookbook/security/form_login_setup.html
             #form_login: ~
+
+
+        # Ajout d'un encoder pour notre entité USer
+    encoders:
+        AppBundle\Entity\User:
+            algorithm: bcrypt
+            cost: 12

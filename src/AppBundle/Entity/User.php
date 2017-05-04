@@ -6,6 +6,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * User
@@ -14,7 +15,7 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
  * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
  * @UniqueEntity("email")
  */
-class User
+class User implements UserInterface
 {
     /**
      * @var int
@@ -29,6 +30,7 @@ class User
      * @var string
      *
      * @ORM\Column(name="firstname", type="string", length=255)
+     * @Assert\NotBlank()
      */
     private $firstname;
 
@@ -36,6 +38,7 @@ class User
      * @var string
      *
      * @ORM\Column(name="lastname", type="string", length=255)
+     * @Assert\NotBlank()
      */
     private $lastname;
 
@@ -46,9 +49,28 @@ class User
 	 *     checkMX = true
 	 * )
      * @ORM\Column(name="email", type="string", length=255, unique=true)
+     * @Assert\NotBlank()
 	 *
      */
     private $email;
+
+    /**
+     * @ORM\Column(type="string")
+     */
+    protected $password;
+
+    /**
+     * @var string
+     *
+     * @Assert\NotBlank()
+     * @Assert\Length(
+     *      min = 2,
+     *      max = 50,
+     *      minMessage = "Your first name must be at least {{ limit }} characters long",
+     *      maxMessage = "Your first name cannot be longer than {{ limit }} characters"
+     * )
+     */
+    protected $plainPassword;
 
 
     /**
@@ -132,5 +154,50 @@ class User
     {
         return $this->email;
     }
+
+    public function getPassword()
+    {
+        return $this->password;
+    }
+
+
+    public function setPassword($password)
+    {
+        $this->password = $password;
+    }
+
+    public function getPlainPassword()
+    {
+        return $this->plainPassword;
+    }
+
+    public function setPlainPassword($plainPassword)
+    {
+        $this->plainPassword = $plainPassword;
+    }
+
+
+    public function getRoles()
+    {
+        return [];
+    }
+
+    public function getSalt()
+    {
+        return null;
+    }
+
+    public function getUsername()
+    {
+        return $this->email;
+    }
+
+    public function eraseCredentials()
+    {
+        // Suppression des données sensibles
+        $this->plainPassword = null;
+    }
+
+
 }
 
