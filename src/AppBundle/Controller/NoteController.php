@@ -62,7 +62,10 @@ class NoteController extends Controller
 
 		$form->submit($request->request->all(), $clearMissing);
 
+
+
 		if ($form->isValid()) {
+            $note->setUpdatedAt(new \DateTime('now'));
 			$em = $this->get('doctrine.orm.entity_manager');
 			// l'entité vient de la base, donc le merge n'est pas nécessaire.
 			// il est utilisé juste par soucis de clarté
@@ -119,6 +122,7 @@ class NoteController extends Controller
 		}
 
 		$note = new Note();
+        $note->setCreatedAt(new \DateTime('now'));
 		$note->setProject($project); // Ici, le projet est associé a la note
 		$form = $this->createForm(NoteType::class, $note);
 

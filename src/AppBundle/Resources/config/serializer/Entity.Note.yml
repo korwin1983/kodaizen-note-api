@@ -8,5 +8,9 @@ AppBundle\Entity\Note:
             groups: ['project', 'note']
         content:
             groups: ['project', 'note']
+        createdAt:
+            groups: ['project', 'note']
+        updatedAt:
+            groups: ['project', 'note']
         project:
             groups: ['note']

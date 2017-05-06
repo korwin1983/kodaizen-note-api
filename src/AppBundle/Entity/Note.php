@@ -30,7 +30,7 @@ class Note
 	protected $name;
 
 	/**
-	 * @ORM\Column(type="string", nullable=true)
+	 * @ORM\Column(type="string", nullable=true, name="no_content")
 	 * @Assert\Type("string")
 	 */
 	protected $content;
@@ -41,6 +41,18 @@ class Note
 	 * @var project
 	 */
 	protected $project;
+
+    /**
+     * @ORM\Column(type="datetime", name="no_createdat")
+     * @var \DateTime
+     */
+    protected $createdAt;
+
+    /**
+     * @ORM\Column(type="datetime", name="no_updatedat", nullable=true)
+     * @var \DateTime
+     */
+    protected $updatedAt;
 
 	public function getId()
 	{
@@ -78,5 +90,26 @@ class Note
 	{
 		return $this->project;
 	}
+
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(\DateTime $createdAt)
+    {
+        $this->createdAt = $createdAt;
+    }
+
+    public function getUpdatedAt()
+    {
+        return $this->updatedAt;
+    }
+
+    public function setUpdatedAt(\DateTime $updatedAt)
+    {
+        $this->updatedAt = $updatedAt;
+    }
+
 
 }
