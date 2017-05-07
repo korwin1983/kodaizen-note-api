@@ -196,8 +196,10 @@ class NoteController extends Controller
 
 	private function projectNotFound()
 	{
-		return \FOS\RestBundle\View\View::create(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+		//return \FOS\RestBundle\View\View::create(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+        throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('Project not found');
 	}
+
 
 }
 

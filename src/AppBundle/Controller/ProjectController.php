@@ -139,7 +139,8 @@ class ProjectController extends Controller
 		/* @var $project Project */
 
 		if (empty($project)) {
-			return new JsonResponse(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+			//return new JsonResponse(['message' => 'Project not found'], Response::HTTP_NOT_FOUND);
+            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('Project not found');
 		}
 		return $project;
 	}
