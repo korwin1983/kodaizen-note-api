@@ -7,6 +7,9 @@ security:
         in_memory:
             memory: ~
 
+        auth_token_user_provider:
+            id: auth_token_user_provider
+
     firewalls:
         # disables authentication for assets and the profiler, adapt it according to your needs
         dev:
@@ -14,6 +17,11 @@ security:
             security: false
 
         main:
+            pattern: ^/
+            stateless: true
+            simple_preauth:
+                authenticator: auth_token_authenticator
+            provider: auth_token_user_provider
             anonymous: ~
             # activate different ways to authenticate
 
@@ -22,6 +30,7 @@ security:
 
             # http://symfony.com/doc/current/cookbook/security/form_login_setup.html
             #form_login: ~
+
 
 
         # Ajout d'un encoder pour notre entité USer
