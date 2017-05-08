@@ -10,115 +10,158 @@ use FOS\RestBundle\Controller\Annotations as Rest; //annotations pour FOSRestBun
 use AppBundle\Form\Type\UserType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class UserController extends Controller {
-	//add user
-	/**
-	 * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"user"})
-	 * @Rest\Post("/users")
-	 */
-	public function postUsersAction(Request $request)
-	{
-		$user = new User();
+class UserController extends Controller
+{
+    //add user
+    /**
+     * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"user"})
+     * @Rest\Post("/users/{rights}")
+     */
+    public function postUsersAction(Request $request)
+    {
+        $rights = $request->get('rights');
 
-		$form = $this->createForm(UserType::class, $user);
+        if($rights === 'admin' && $this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')){
+            $role = 'ROLE_ADMIN';
+        }
+        else if ($rights === 'admin' && !$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+        }
 
-		$form->submit($request->request->all()); // Validation des données
+        else {
+            $role = 'ROLE_USER';
+        }
 
-		if ($form->isValid()) {
+        $role = 'ROLE_ADMIN';
+
+        $user = new User();
+
+        $user->setRoles(array($role));
+
+        $form = $this->createForm(UserType::class, $user);
+
+        $form->submit($request->request->all()); // Validation des données
+
+        if ($form->isValid()) {
             $encoder = $this->get('security.password_encoder');
             // le mot de passe en claire est encodé avant la sauvegarde
             $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
             $user->setPassword($encoded);
-			$em = $this->get('doctrine.orm.entity_manager');
-			$em->persist($user);
-			$em->flush();
-			return $user;
-		} else {
-			return $form;
-		}
-	}
+            $em = $this->get('doctrine.orm.entity_manager');
+            $em->persist($user);
+            $em->flush();
+            return $user;
+        } else {
+            return $form;
+        }
+    }
 
-	//get all users
-	/**
-	 * @Rest\View(serializerGroups={"user"})
-	 * @Rest\Get("/users")
-	 */
-	public function getUsersAction(Request $request)
-	{
+    //get all users
+    /**
+     * @Rest\View(serializerGroups={"user"})
+     * @Rest\Get("/users")
+     */
+    public function getUsersAction(Request $request)
+    {
 
-		$users = $this->get('doctrine.orm.entity_manager')
-			->getRepository('AppBundle:User')
-			->findAll();
-		/* @var $users User[] */
+        // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
+        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            // Sinon on déclenche une exception « Accès interdit »
+            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+        }
 
-		return $users;
-	}
+        $users = $this->get('doctrine.orm.entity_manager')
+            ->getRepository('AppBundle:User')
+            ->findAll();
+        /* @var $users User[] */
+
+        return $users;
+    }
 
 
-	//get user by id
-	/**
-	 * @Rest\View(serializerGroups={"user"})
-	 * @Rest\Get("/users/{id}")
-	 */
-	public function getUserAction($id, Request $request)
-	{
-		$project = $this->get('doctrine.orm.entity_manager')
-			->getRepository('AppBundle:User')
-			->find($id);
-		/* @var $user User */
+    //get user by id
+    /**
+     * @Rest\View(serializerGroups={"user"})
+     * @Rest\Get("/users/{id}")
+     */
+    public function getUserAction($id, Request $request)
+    {
 
-		if (empty($user)) {
+        // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
+        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            // Sinon on déclenche une exception « Accès interdit »
+            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+        }
+
+        $user = $this->get('doctrine.orm.entity_manager')
+            ->getRepository('AppBundle:User')
+            ->find($id);
+        /* @var $user User */
+
+        if (empty($user)) {
             return $this->userNotFound();
-		}
+        }
 
-		return $user;
+        return $user;
 
-	}
-
-
-	/**
-	 * @Rest\View(serializerGroups={"user"})
-	 * @Rest\Put("/users/{id}")
-	 */
-	public function updateUserAction(Request $request)
-	{
-		return $this->updateUser($request, true);
-	}
-
-	/**
-	 * @Rest\View(serializerGroups={"user"})
-	 * @Rest\Patch("/users/{id}")
-	 */
-	public function patchUserAction(Request $request)
-	{
-		return $this->updateUser($request, false);
-	}
+    }
 
 
+    /**
+     * @Rest\View(serializerGroups={"user"})
+     * @Rest\Put("/users/{id}")
+     */
+    public function updateUserAction(Request $request)
+    {
+
+        // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
+        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            // Sinon on déclenche une exception « Accès interdit »
+            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+        }
+
+        return $this->updateUser($request, true);
+    }
+
+    /**
+     * @Rest\View(serializerGroups={"user"})
+     * @Rest\Patch("/users/{id}")
+     */
+    public function patchUserAction(Request $request)
+    {
+
+        // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
+        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            // Sinon on déclenche une exception « Accès interdit »
+            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+        }
+
+        return $this->updateUser($request, false);
+    }
 
 
-	private function updateUser(Request $request, $clearMissing)
-	{
-		$user = $this->get('doctrine.orm.entity_manager')
-			->getRepository('AppBundle:User')
-			->find($request->get('id')); // L'identifiant en tant que paramètre n'est plus nécessaire
-		/* @var $user User */
+    private function updateUser(Request $request, $clearMissing)
+    {
+        $user = $this->get('doctrine.orm.entity_manager')
+            ->getRepository('AppBundle:User')
+            ->find($request->get('id')); // L'identifiant en tant que paramètre n'est plus nécessaire
+        /* @var $user User */
 
-		if (empty($user)) {
+        if (empty($user)) {
             return $this->userNotFound();
-		}
+        }
 
         if ($clearMissing) { // Si une mise à jour complète, le mot de passe doit être validé
-            $options = ['validation_groups'=>['Default', 'FullUpdate']];
+            $options = ['validation_groups' => ['Default', 'FullUpdate']];
         } else {
             $options = []; // Le groupe de validation par défaut de Symfony est Default
         }
 
-		$form = $this->createForm(UserType::class, $user, $options);
+        $form = $this->createForm(UserType::class, $user, $options);
 
-		$form->submit($request->request->all(), $clearMissing);
+        $form->submit($request->request->all(), $clearMissing);
 
-		if ($form->isValid()) {
+        if ($form->isValid()) {
 
             // Si l'utilisateur veut changer son mot de passe
             if (!empty($user->getPlainPassword())) {
@@ -127,35 +170,42 @@ class UserController extends Controller {
                 $user->setPassword($encoded);
             }
 
-			$em = $this->get('doctrine.orm.entity_manager');
-			// l'entité vient de la base, donc le merge n'est pas nécessaire.
-			// il est utilisé juste par soucis de clarté
-			$em->merge($user);
-			$em->flush();
-			return $user;
-		} else {
-			return $form;
-		}
-	}
+            $em = $this->get('doctrine.orm.entity_manager');
+            // l'entité vient de la base, donc le merge n'est pas nécessaire.
+            // il est utilisé juste par soucis de clarté
+            $em->merge($user);
+            $em->flush();
+            return $user;
+        } else {
+            return $form;
+        }
+    }
 
 
-	//delete user
-	/**
-	 * @Rest\View(statusCode=Response::HTTP_NO_CONTENT)
-	 * @Rest\Delete("/users/{id}")
-	 */
-	public function removeUserAction(Request $request)
-	{
-		$em = $this->get('doctrine.orm.entity_manager');
-		$user = $em->getRepository('AppBundle:User')
-			->find($request->get('id'));
-		/* @var $user User */
+    //delete user
+    /**
+     * @Rest\View(statusCode=Response::HTTP_NO_CONTENT)
+     * @Rest\Delete("/users/{id}")
+     */
+    public function removeUserAction(Request $request)
+    {
 
-		if ($user) {
-			$em->remove($user);
-			$em->flush();
-		}
-	}
+        // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
+        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            // Sinon on déclenche une exception « Accès interdit »
+            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+        }
+
+        $em = $this->get('doctrine.orm.entity_manager');
+        $user = $em->getRepository('AppBundle:User')
+            ->find($request->get('id'));
+        /* @var $user User */
+
+        if ($user) {
+            $em->remove($user);
+            $em->flush();
+        }
+    }
 
 
     private function userNotFound()

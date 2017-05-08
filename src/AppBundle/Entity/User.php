@@ -44,13 +44,13 @@ class User implements UserInterface
 
     /**
      * @var string
-	 * @Assert\Email(
-	 *     message = "The email '{{ value }}' is not a valid email.",
-	 *     checkMX = true
-	 * )
+     * @Assert\Email(
+     *     message = "The email '{{ value }}' is not a valid email.",
+     *     checkMX = true
+     * )
      * @ORM\Column(name="email", type="string", length=255, unique=true)
      * @Assert\NotBlank()
-	 *
+     *
      */
     private $email;
 
@@ -72,12 +72,25 @@ class User implements UserInterface
      */
     protected $plainPassword;
 
+    /**
+     * @ORM\Column(name="roles", type="array")
+     */
+    private $roles = array();
+
 
     /**
      * @ORM\OneToMany(targetEntity="Project", mappedBy="user")
      * @var project[]
      */
     protected $projects;
+
+
+    /**
+     * @ORM\OneToMany(targetEntity="AuthToken", mappedBy="user")
+     * @var AuthToken[]
+     */
+
+    protected $authtokens;
 
 
     /**
@@ -186,7 +199,13 @@ class User implements UserInterface
 
     public function getRoles()
     {
-        return [];
+//        return [];
+        return $this->roles;
+    }
+
+    public function setRoles($roles)
+    {
+        $this->roles = $roles;
     }
 
     public function getSalt()

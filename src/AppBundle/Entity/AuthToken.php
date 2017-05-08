@@ -30,7 +30,7 @@ class AuthToken
     protected $createdAt;
 
     /**
-     * @ORM\ManyToOne(targetEntity="User")
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="authtokens")
      * @var User
      */
     protected $user;
