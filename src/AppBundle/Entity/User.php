@@ -74,6 +74,13 @@ class User implements UserInterface
 
 
     /**
+     * @ORM\OneToMany(targetEntity="Project", mappedBy="user")
+     * @var project[]
+     */
+    protected $projects;
+
+
+    /**
      * Get id
      *
      * @return int
@@ -196,6 +203,11 @@ class User implements UserInterface
     {
         // Suppression des données sensibles
         $this->plainPassword = null;
+    }
+
+    public function getProjects()
+    {
+        return $this->projects;
     }
 
 

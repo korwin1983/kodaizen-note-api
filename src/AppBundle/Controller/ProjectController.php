@@ -92,7 +92,10 @@ class ProjectController extends Controller
 	 */
 	public function postPlacesAction(Request $request)
 	{
+        $connectedUser = $this->get('security.token_storage')->getToken()->getUser();
+
 		$project = new Project();
+		$project->setUser($connectedUser);
 
 		$form = $this->createForm(ProjectType::class, $project);
 
@@ -116,9 +119,14 @@ class ProjectController extends Controller
 	public function getProjectsAction(Request $request)
 	{
 
-		$projects = $this->get('doctrine.orm.entity_manager')
-			->getRepository('AppBundle:Project')
-			->findAll();
+
+        $connectedUser = $this->get('security.token_storage')->getToken()->getUser();
+        //dump($connectedUserId);
+
+//		$projects = $this->get('doctrine.orm.entity_manager')
+//			->getRepository('AppBundle:Project')
+//			->findAll();
+        $projects = $connectedUser->getProjects();
 		/* @var $projects Project[] */
 
 

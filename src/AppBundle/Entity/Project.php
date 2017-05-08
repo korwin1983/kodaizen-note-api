@@ -36,6 +36,13 @@ class Project
 	 */
     protected $notes;
 
+    /**
+     * @ORM\ManyToOne(targetEntity="User", inversedBy="projects")
+     * @ORM\JoinColumn(name="user_id", referencedColumnName="id", onDelete="CASCADE")
+     * @var user
+     */
+    protected $user;
+
 
     public function getId()
     {
@@ -68,6 +75,11 @@ class Project
 	{
 		return $this->notes;
 	}
+
+    public function setUser($user)
+    {
+        return $this->user = $user;
+    }
 
 
 }
