@@ -9,6 +9,7 @@ use FOS\RestBundle\Controller\Annotations as Rest; // alias pour toutes les anno
 use AppBundle\Form\Type\CredentialsType;
 use AppBundle\Entity\AuthToken;
 use AppBundle\Entity\Credentials;
+use \Firebase\JWT\JWT;
 
 class AuthTokenController extends Controller
 
@@ -34,7 +35,6 @@ class AuthTokenController extends Controller
             throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException();
         }
     }
-
 
 
     /**
@@ -68,8 +68,23 @@ class AuthTokenController extends Controller
             return $this->invalidCredentials();
         }
 
+        $key = "suricate";
+        $token = array(
+            "createdAt" => new \DateTime('now'),
+            "id" => $user->getId(),
+            "firstname" => $user->getFirstname(),
+            "lastname" => $user->getLastname(),
+            "email"=> $user->getEmail(),
+            "admin" => true
+        );
+
+        $jwt = JWT::encode($token, $key);
+
+//        dump($jwt);
+
         $authToken = new AuthToken();
-        $authToken->setValue(base64_encode(random_bytes(50)));
+//        $authToken->setValue(base64_encode(random_bytes(50)));
+        $authToken->setValue($jwt);
         $authToken->setCreatedAt(new \DateTime('now'));
         $authToken->setUser($user);
 

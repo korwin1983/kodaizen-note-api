@@ -19,7 +19,7 @@ class AuthToken
     protected $id;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", length=512)
      */
     protected $value;
 

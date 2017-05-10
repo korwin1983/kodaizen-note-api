@@ -12,7 +12,6 @@ use AppBundle\Entity\Note;
 /**
  * @ORM\Entity()
  * @ORM\Table(name="su_projects")
- * @UniqueEntity("name")
  */
 
 class Project
