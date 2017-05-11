@@ -77,6 +77,13 @@ class User implements UserInterface
      */
     private $roles = array();
 
+    /**
+     * @var string
+     *
+     * @Assert\NotBlank()
+     */
+    protected $role;
+
 
     /**
      * @ORM\OneToMany(targetEntity="Project", mappedBy="user")
@@ -227,6 +234,15 @@ class User implements UserInterface
     public function getProjects()
     {
         return $this->projects;
+    }
+
+    public function getRole(){
+        return $this->role;
+    }
+
+    public function setRole($role)
+    {
+        $this->role = $role;
     }
 
 

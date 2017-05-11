@@ -15,34 +15,23 @@ class UserController extends Controller
     //add user
     /**
      * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"user"})
-     * @Rest\Post("/users/{rights}")
+     * @Rest\Post("/users")
      */
     public function postUsersAction(Request $request)
     {
-        $rights = $request->get('rights');
-
-        if($rights === 'admin' && $this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')){
-            $role = 'ROLE_ADMIN';
-        }
-        else if ($rights === 'admin' && !$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
-            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
-        }
-
-        else {
-            $role = 'ROLE_USER';
-        }
-
-        $role = 'ROLE_ADMIN';
 
         $user = new User();
-
-        $user->setRoles(array($role));
 
         $form = $this->createForm(UserType::class, $user);
 
         $form->submit($request->request->all()); // Validation des données
 
         if ($form->isValid()) {
+            $role = $user->getRole();
+            if($role === "ROLE_ADMIN" && !$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+                return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+            }
+            $user->setRoles(array($role));
             $encoder = $this->get('security.password_encoder');
             // le mot de passe en claire est encodé avant la sauvegarde
             $encoded = $encoder->encodePassword($user, $user->getPlainPassword());

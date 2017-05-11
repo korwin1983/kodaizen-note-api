@@ -15,7 +15,7 @@ class UserType extends AbstractType
 		$builder->add('lastname');
         $builder->add('plainPassword'); // Rajout du mot de passe
 		$builder->add('email');
-//		$builder->add('roles');
+		$builder->add('role');
 	}
 
 	public function configureOptions(OptionsResolver $resolver)
