@@ -22,7 +22,7 @@ class Note
 	protected $id;
 
 	/**
-	 * @ORM\Column(type="string", nullable=false, unique=true, name="no_name")
+	 * @ORM\Column(type="string", nullable=false, name="no_name")
 	 * @Assert\NotBlank()
 	 * @Assert\NotNull()
 	 * @Assert\Type("string")

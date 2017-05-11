@@ -1,7 +1,7 @@
 # src/AppBundle/Resources/config/validation.yml
 AppBundle\Entity\Project:
     constraints:
-        - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: name
+        - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: id
     properties:
         name:
             - NotBlank: ~
@@ -10,22 +10,23 @@ AppBundle\Entity\Project:
 
 AppBundle\Entity\Note:
     constraints:
-        - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: name
+        - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: id
     properties:
         name:
             - NotBlank: ~
             - Type: string
 
-AppBundle\Entity\Note:
+AppBundle\Entity\User:
     constraints:
         - Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity: email
     properties:
         firstname:
             - NotBlank: ~
             - Type: string
-        lasttname:
+        lastname:
             - NotBlank: ~
             - Type: string
         email:
-            - NotBlank: ~
-            - Type: email
+            - Email:
+                message: The email "{{ value }}" is not a valid email.
+                checkMX: true

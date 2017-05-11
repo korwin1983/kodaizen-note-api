@@ -8,7 +8,6 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Doctrine\Common\Collections\ArrayCollection;
 use AppBundle\Entity\Note;
 
-
 /**
  * @ORM\Entity()
  * @ORM\Table(name="su_projects")
@@ -25,7 +24,7 @@ class Project
     protected $id;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="string", unique=false)
      */
     protected $name;
 

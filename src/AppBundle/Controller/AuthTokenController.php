@@ -74,8 +74,7 @@ class AuthTokenController extends Controller
             "id" => $user->getId(),
             "firstname" => $user->getFirstname(),
             "lastname" => $user->getLastname(),
-            "email"=> $user->getEmail(),
-            "admin" => true
+            "email"=> $user->getEmail()
         );
 
         $jwt = JWT::encode($token, $key);
