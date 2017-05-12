@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 /**
  * User
  *
- * @ORM\Table(name="user")
+ * @ORM\Table(name="su_user")
  * @ORM\Entity(repositoryClass="AppBundle\Repository\UserRepository")
  * @UniqueEntity("email")
  */
@@ -31,6 +31,7 @@ class User implements UserInterface
      *
      * @ORM\Column(name="firstname", type="string", length=255)
      * @Assert\NotBlank()
+     * @Assert\Type("string")
      */
     private $firstname;
 
@@ -39,6 +40,7 @@ class User implements UserInterface
      *
      * @ORM\Column(name="lastname", type="string", length=255)
      * @Assert\NotBlank()
+     * @Assert\Type("string")
      */
     private $lastname;
 
@@ -81,6 +83,7 @@ class User implements UserInterface
      * @var string
      *
      * @Assert\NotBlank()
+     * @Assert\Type("string")
      */
     protected $role;
 
