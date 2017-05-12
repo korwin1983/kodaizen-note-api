@@ -12,6 +12,37 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UserController extends Controller
 {
+
+    //activate user
+    /**
+     * @Rest\View(statusCode=Response::HTTP_OK, serializerGroups={"user"})
+     * @Rest\Post("/users/activate/{key}")
+     *
+     */
+    public function activateUserAction(Request $request)
+    {
+        $key = $request->get('key');
+        $user = $this->get('doctrine.orm.entity_manager')
+            ->getRepository('AppBundle:User')
+            ->findOneBy(array('activationkey'=> $key));
+
+        /* @var $user User */
+
+        if (empty($user)) {
+            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('User not found');
+        }
+        if($user->getActive())
+        {
+            return \FOS\RestBundle\View\View::create(['message' => 'Account already active'], Response::HTTP_OK);
+        }
+        $user->setActive(true);
+        $em = $this->get('doctrine.orm.entity_manager');
+        $em->persist($user);
+        $em->flush();
+        return $user;
+    }
+
+
     //add user
     /**
      * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"user"})
@@ -21,6 +52,9 @@ class UserController extends Controller
     {
 
         $user = new User();
+        //$activationkey = base64_encode(random_bytes(15));
+        $activationkey = uniqid();
+        $user->setActivationKey($activationkey);
 
         $form = $this->createForm(UserType::class, $user);
 
@@ -32,6 +66,7 @@ class UserController extends Controller
                 return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
             }
             $user->setRoles(array($role));
+
             $encoder = $this->get('security.password_encoder');
             // le mot de passe en claire est encodé avant la sauvegarde
             $encoded = $encoder->encodePassword($user, $user->getPlainPassword());

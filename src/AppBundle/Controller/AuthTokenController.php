@@ -61,6 +61,13 @@ class AuthTokenController extends Controller
             return $this->invalidCredentials();
         }
 
+        $active = $user->getActive();
+        if(!$active){
+            return \FOS\RestBundle\View\View::create(['message' => 'Inactive account'], Response::HTTP_LOCKED);
+        }
+
+
+
         $encoder = $this->get('security.password_encoder');
         $isPasswordValid = $encoder->isPasswordValid($user, $credentials->getPassword());
 
@@ -78,9 +85,6 @@ class AuthTokenController extends Controller
         );
 
         $jwt = JWT::encode($token, $key);
-
-//        dump($jwt);
-
         $authToken = new AuthToken();
 //        $authToken->setValue(base64_encode(random_bytes(50)));
         $authToken->setValue($jwt);
@@ -91,7 +95,6 @@ class AuthTokenController extends Controller
         $em->flush();
 
         return $authToken;
-//        dump($authToken);
     }
 
     private function invalidCredentials()

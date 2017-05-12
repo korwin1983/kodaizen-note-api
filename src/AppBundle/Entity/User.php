@@ -102,6 +102,24 @@ class User implements UserInterface
 
     protected $authtokens;
 
+    /**
+     * @var bool
+     *
+     * @ORM\Column(type="boolean", name="us_active", nullable=true)
+     * @Assert\Type("bool")
+     */
+    protected $active;
+
+
+    /**
+     * @var string
+     *
+     * @ORM\Column(type="string", name="us_activationkey")
+     * @Assert\NotNull()
+     * @Assert\NotBlank()
+     *
+     */
+    protected $activationkey;
 
     /**
      * Get id
@@ -239,13 +257,34 @@ class User implements UserInterface
         return $this->projects;
     }
 
-    public function getRole(){
+    public function getRole()
+    {
         return $this->role;
     }
 
     public function setRole($role)
     {
         $this->role = $role;
+    }
+
+    public function getActive()
+    {
+        return $this->active;
+    }
+
+    public function setActive($active)
+    {
+        $this->active = $active;
+    }
+
+    public function getActivationKey()
+    {
+        return $this->activationkey;
+    }
+
+    public function setActivationKey($activationkey)
+    {
+        $this->activationkey = $activationkey;
     }
 
 

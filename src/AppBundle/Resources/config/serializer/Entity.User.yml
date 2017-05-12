@@ -17,3 +17,5 @@ AppBundle\Entity\User:
             groups: []
         role:
             groups: []
+        active:
+            groups: ['user']
