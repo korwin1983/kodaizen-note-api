@@ -105,7 +105,7 @@ class User implements UserInterface
     /**
      * @var bool
      *
-     * @ORM\Column(type="boolean", name="us_active", nullable=true)
+     * @ORM\Column(type="boolean", name="active", nullable=true)
      * @Assert\Type("bool")
      */
     protected $active;
@@ -114,9 +114,7 @@ class User implements UserInterface
     /**
      * @var string
      *
-     * @ORM\Column(type="string", name="us_activationkey")
-     * @Assert\NotNull()
-     * @Assert\NotBlank()
+     * @ORM\Column(type="string", name="activationkey")
      *
      */
     protected $activationkey;

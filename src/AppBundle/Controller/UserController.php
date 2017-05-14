@@ -1,13 +1,16 @@
 <?php
+
 namespace AppBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use AppBundle\Entity\User; //importation du modèle Project
+use AppBundle\Entity\Validation;
 use FOS\RestBundle\View\View; // utilisation de la vue de FOSRestBundle
 use FOS\RestBundle\Controller\Annotations as Rest; //annotations pour FOSRestBundle
 use AppBundle\Form\Type\UserType;
+use AppBundle\Form\Type\ValidationType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 class UserController extends Controller
@@ -16,34 +19,53 @@ class UserController extends Controller
     //activate user
     /**
      * @Rest\View(statusCode=Response::HTTP_OK, serializerGroups={"user"})
-     * @Rest\Post("/users/activate/{key}")
+     * @Rest\Post("/users/activate")
      *
      */
     public function activateUserAction(Request $request)
     {
-        $key = $request->get('key');
-        $user = $this->get('doctrine.orm.entity_manager')
-            ->getRepository('AppBundle:User')
-            ->findOneBy(array('activationkey'=> $key));
 
-        /* @var $user User */
+        $validation = new Validation();
 
-        if (empty($user)) {
-            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('User not found');
+        $form = $this->createForm(ValidationType::class, $validation);
+        $form->submit($request->request->all()); // Validation des données
+
+        if ($form->isValid()) {
+            $email = $request->get('login');
+            $user = $this->get('doctrine.orm.entity_manager')
+                ->getRepository('AppBundle:User')
+                ->findOneBy(array('email' => $email));
+            /* @var $user User */
+
+            if (empty($user)) {
+                throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('User not found');
+            }
+            if ($user->getActive()) {
+                return \FOS\RestBundle\View\View::create(['message' => 'Account already active'], Response::HTTP_OK);
+            }
+            $activationkey = $user->getActivationKey();
+
+            if ($request->get('activationkey') === $activationkey) {
+                $user->setActive(true);
+                $em = $this->get('doctrine.orm.entity_manager');
+                $em->persist($user);
+                $em->flush();
+                return $user;
+            }
+            else {
+                return \FOS\RestBundle\View\View::create(['message' => 'Invalid activation key'], Response::HTTP_BAD_REQUEST);
+            }
+
+        } else {
+            return $form;
         }
-        if($user->getActive())
-        {
-            return \FOS\RestBundle\View\View::create(['message' => 'Account already active'], Response::HTTP_OK);
-        }
-        $user->setActive(true);
-        $em = $this->get('doctrine.orm.entity_manager');
-        $em->persist($user);
-        $em->flush();
-        return $user;
+
+
     }
 
 
     //add user
+
     /**
      * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"user"})
      * @Rest\Post("/users")
@@ -53,8 +75,6 @@ class UserController extends Controller
 
         $user = new User();
         //$activationkey = base64_encode(random_bytes(15));
-        $activationkey = uniqid();
-        $user->setActivationKey($activationkey);
 
         $form = $this->createForm(UserType::class, $user);
 
@@ -62,7 +82,7 @@ class UserController extends Controller
 
         if ($form->isValid()) {
             $role = $user->getRole();
-            if($role === "ROLE_ADMIN" && !$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+            if ($role === "ROLE_ADMIN" && !$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
                 return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
             }
             $user->setRoles(array($role));
@@ -71,6 +91,8 @@ class UserController extends Controller
             // le mot de passe en claire est encodé avant la sauvegarde
             $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
             $user->setPassword($encoded);
+            $activationkey = uniqid();
+            $user->setActivationKey($activationkey);
             $em = $this->get('doctrine.orm.entity_manager');
             $em->persist($user);
             $em->flush();
@@ -81,6 +103,7 @@ class UserController extends Controller
     }
 
     //get all users
+
     /**
      * @Rest\View(serializerGroups={"user"})
      * @Rest\Get("/users")
@@ -104,6 +127,7 @@ class UserController extends Controller
 
 
     //get user by id
+
     /**
      * @Rest\View(serializerGroups={"user"})
      * @Rest\Get("/users/{id}")
@@ -207,6 +231,7 @@ class UserController extends Controller
 
 
     //delete user
+
     /**
      * @Rest\View(statusCode=Response::HTTP_NO_CONTENT)
      * @Rest\Delete("/users/{id}")
