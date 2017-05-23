@@ -18,7 +18,7 @@ class UserController extends Controller
 
     //activate user
     /**
-     * @Rest\View(statusCode=Response::HTTP_OK, serializerGroups={"user"})
+     * @Rest\View(serializerGroups={"user"})
      * @Rest\Post("/users/activate")
      *
      */
@@ -38,10 +38,13 @@ class UserController extends Controller
             /* @var $user User */
 
             if (empty($user)) {
-                throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('User not found');
+                return \FOS\RestBundle\View\View::create(['message' => 'Aucun compte n\'est associé à cette adresse mail.'], Response::HTTP_NOT_FOUND);
             }
             if ($user->getActive()) {
-                return \FOS\RestBundle\View\View::create(['message' => 'Account already active'], Response::HTTP_OK);
+                return \FOS\RestBundle\View\View::create([
+                    'success' => false,
+                    'message' => 'Votre compte est déjà activé.'
+                ], Response::HTTP_BAD_REQUEST);
             }
             $activationkey = $user->getActivationKey();
 
@@ -50,10 +53,12 @@ class UserController extends Controller
                 $em = $this->get('doctrine.orm.entity_manager');
                 $em->persist($user);
                 $em->flush();
-                return $user;
-            }
-            else {
-                return \FOS\RestBundle\View\View::create(['message' => 'Invalid activation key'], Response::HTTP_BAD_REQUEST);
+                return \FOS\RestBundle\View\View::create([
+                    'user' => $user,
+                    'message' => 'Votre compte a bien été activé.'
+                ], Response::HTTP_OK);
+            } else {
+                return \FOS\RestBundle\View\View::create(['message' => 'Clé d\'activation invalide.'], Response::HTTP_BAD_REQUEST);
             }
 
         } else {
@@ -67,21 +72,31 @@ class UserController extends Controller
     //add user
 
     /**
-     * @Rest\View(statusCode=Response::HTTP_CREATED, serializerGroups={"user"})
+     * @Rest\View(serializerGroups={"user"})
      * @Rest\Post("/users")
      */
     public function postUsersAction(Request $request)
     {
 
         $user = new User();
-        //$activationkey = base64_encode(random_bytes(15));
 
         $form = $this->createForm(UserType::class, $user);
 
         $form->submit($request->request->all()); // Validation des données
 
+
+        $email = $user->getEmail();
+        $exisingUser = $this->get('doctrine.orm.entity_manager')
+            ->getRepository('AppBundle:User')
+            ->findOneBy(array('email' => $email));
+
+        if ($exisingUser) {
+            return \FOS\RestBundle\View\View::create(['success' => 'false'], Response::HTTP_OK);
+        }
+
         if ($form->isValid()) {
             $role = $user->getRole();
+
             if ($role === "ROLE_ADMIN" && !$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
                 return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
             }
@@ -96,11 +111,43 @@ class UserController extends Controller
             $em = $this->get('doctrine.orm.entity_manager');
             $em->persist($user);
             $em->flush();
+            $this->sendUserCredentials($user->getEmail(), $user->getPlainPassword(), $user->getActivationKey());
+
+
+            return \FOS\RestBundle\View\View::create(['success' => 'true'], Response::HTTP_CREATED);
             return $user;
         } else {
             return $form;
         }
     }
+
+
+    private function sendUserCredentials($login, $password, $secretkey)
+    {
+        $message = \Swift_Message::newInstance()
+            ->setSubject('Création de compte Kodaizen note')
+            ->setFrom('contact@kodaizen.com')
+            ->setTo($login)
+            ->setBody(
+                $this->renderView(
+                // app/Resources/views/Emails/registration.html.twig
+                    'sendCredentials.html.twig',
+                    array('login' => $login, 'password' => $password, 'secretkey' => $secretkey)
+                ),
+                'text/html'
+            );
+        $this->get('mailer')->send($message);
+    }
+
+    /**
+     * @Rest\View()
+     * @Rest\Get("/users/testmail")
+     */
+    public function sendMailAction()
+    {
+        $this->sendUserCredentials('guillaume.cartie@gmail.com', 'toto', 'sidilarsen', 'kjferj');
+    }
+
 
     //get all users
 
