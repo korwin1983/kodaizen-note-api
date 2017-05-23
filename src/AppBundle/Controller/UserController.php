@@ -86,12 +86,12 @@ class UserController extends Controller
 
 
         $email = $user->getEmail();
-        $exisingUser = $this->get('doctrine.orm.entity_manager')
+        $existingUser = $this->get('doctrine.orm.entity_manager')
             ->getRepository('AppBundle:User')
             ->findOneBy(array('email' => $email));
 
-        if ($exisingUser) {
-            return \FOS\RestBundle\View\View::create(['success' => 'false'], Response::HTTP_OK);
+        if ($existingUser) {
+            return \FOS\RestBundle\View\View::create(['message' => 'Le compte associé à cette adresse mail est déjà créé.'], Response::HTTP_BAD_REQUEST);
         }
 
         if ($form->isValid()) {
