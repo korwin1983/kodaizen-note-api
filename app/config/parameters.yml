@@ -1,0 +1,15 @@
+# This file is auto-generated during the composer install
+parameters:
+    database_host: localhost
+    database_port: null
+    database_name: surciate
+    database_user: root
+    database_password: null
+    mailer_transport: smtp
+    mailer_auth_mode: login
+    mailer_encryption: null
+    mailer_host: ns0.ovh.net
+    mailer_port: 587
+    mailer_user: contact@kodaizen.com
+    mailer_password: kdzsidilarsen
+    secret: sidilarsen
