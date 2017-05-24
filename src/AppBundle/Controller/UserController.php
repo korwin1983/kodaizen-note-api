@@ -98,7 +98,7 @@ class UserController extends Controller
             $role = $user->getRole();
 
             if ($role === "ROLE_ADMIN" && !$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
-                return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+                return \FOS\RestBundle\View\View::create(['message' => 'Droits insuffisants.'], Response::HTTP_FORBIDDEN);
             }
             $user->setRoles(array($role));
 
@@ -114,7 +114,7 @@ class UserController extends Controller
             $this->sendUserCredentials($user->getEmail(), $user->getPlainPassword(), $user->getActivationKey());
 
 
-            return \FOS\RestBundle\View\View::create(['success' => 'true'], Response::HTTP_CREATED);
+            return \FOS\RestBundle\View\View::create(['message' => 'Votre compte a bien été créé.'], Response::HTTP_CREATED);
             return $user;
         } else {
             return $form;

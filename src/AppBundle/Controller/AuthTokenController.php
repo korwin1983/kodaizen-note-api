@@ -58,12 +58,13 @@ class AuthTokenController extends Controller
             ->findOneByEmail($credentials->getLogin());
 
         if (!$user) { // L'utilisateur n'existe pas
-            return $this->invalidCredentials();
+            return \FOS\RestBundle\View\View::create(['message' => 'Auncin compte n\'est associé à cette adresse.'], Response::HTTP_BAD_REQUEST);
+            // return $this->invalidCredentials();
         }
 
         $active = $user->getActive();
         if(!$active){
-            return \FOS\RestBundle\View\View::create(['message' => 'Inactive account'], Response::HTTP_LOCKED);
+            return \FOS\RestBundle\View\View::create(['message' => 'Vous devez activer votre compte.'], Response::HTTP_LOCKED);
         }
 
 
@@ -72,10 +73,11 @@ class AuthTokenController extends Controller
         $isPasswordValid = $encoder->isPasswordValid($user, $credentials->getPassword());
 
         if (!$isPasswordValid) { // Le mot de passe n'est pas correct
-            return $this->invalidCredentials();
+            return \FOS\RestBundle\View\View::create(['message' => 'Mot de passe incorret.'], Response::HTTP_BAD_REQUEST);
+            // return $this->invalidCredentials();
         }
 
-        $key = "suricate";
+        $key = "kdznote";
         $token = array(
             "createdAt" => new \DateTime('now'),
             "id" => $user->getId(),
