@@ -31,6 +31,7 @@ class AuthToken
 
     /**
      * @ORM\ManyToOne(targetEntity="User", inversedBy="authtokens")
+     * @ORM\JoinColumn(onDelete="CASCADE",name="user_id", referencedColumnName="id")
      * @var User
      */
     protected $user;

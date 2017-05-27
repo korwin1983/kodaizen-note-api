@@ -7,6 +7,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Doctrine\Common\Collections\ArrayCollection;
 
 /**
  * User
@@ -94,14 +95,6 @@ class User implements UserInterface
      */
     protected $projects;
 
-
-    /**
-     * @ORM\OneToMany(targetEntity="AuthToken", mappedBy="user")
-     * @var AuthToken[]
-     */
-
-    protected $authtokens;
-
     /**
      * @var bool
      *
@@ -114,10 +107,34 @@ class User implements UserInterface
     /**
      * @var string
      *
-     * @ORM\Column(type="string", name="activationkey")
+     * @ORM\Column(type="string", name="activationkey", nullable=true)
      *
      */
     protected $activationkey;
+
+
+    /**
+     * @ORM\OneToMany(targetEntity="AuthToken", mappedBy="user")
+     * @var AuthToken[]
+     */
+    protected $authtokens;
+
+
+    /**
+     * User constructor.
+     */
+    public function __construct()
+    {
+        $this->authtokens = new ArrayCollection();
+    }
+
+    /**
+     * @return ArrayCollection|AuthToken[]
+     */
+    public function getAuthTokens()
+    {
+        return $this->authtokens;
+    }
 
     /**
      * Get id

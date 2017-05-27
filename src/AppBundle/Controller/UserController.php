@@ -38,7 +38,7 @@ class UserController extends Controller
             /* @var $user User */
 
             if (empty($user)) {
-                return \FOS\RestBundle\View\View::create(['message' => 'Aucun compte n\'est associé à cette adresse mail.'], Response::HTTP_NOT_FOUND);
+                return \FOS\RestBundle\View\View::create(['message' => 'Aucun compte n\'est associé à cette adresse email.'], Response::HTTP_NOT_FOUND);
             }
             if ($user->getActive()) {
                 return \FOS\RestBundle\View\View::create([
@@ -50,6 +50,7 @@ class UserController extends Controller
 
             if ($request->get('activationkey') === $activationkey) {
                 $user->setActive(true);
+                $user->setActivationKey(null);
                 $em = $this->get('doctrine.orm.entity_manager');
                 $em->persist($user);
                 $em->flush();
@@ -91,7 +92,7 @@ class UserController extends Controller
             ->findOneBy(array('email' => $email));
 
         if ($existingUser) {
-            return \FOS\RestBundle\View\View::create(['message' => 'Le compte associé à cette adresse mail est déjà créé.'], Response::HTTP_BAD_REQUEST);
+            return \FOS\RestBundle\View\View::create(['message' => 'Le compte associé à cette adresse email est déjà créé.'], Response::HTTP_BAD_REQUEST);
         }
 
         if ($form->isValid()) {
@@ -106,7 +107,7 @@ class UserController extends Controller
             // le mot de passe en claire est encodé avant la sauvegarde
             $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
             $user->setPassword($encoded);
-            $activationkey = uniqid();
+            $activationkey = uniqid('kdz');
             $user->setActivationKey($activationkey);
             $em = $this->get('doctrine.orm.entity_manager');
             $em->persist($user);
@@ -114,39 +115,53 @@ class UserController extends Controller
             $this->sendUserCredentials($user->getEmail(), $user->getPlainPassword(), $user->getActivationKey());
 
 
-            return \FOS\RestBundle\View\View::create(['message' => 'Votre compte a bien été créé.'], Response::HTTP_CREATED);
+            return \FOS\RestBundle\View\View::create(['message' => 'Votre compte a bien été créé, vous devez maintenant l\'activer.'], Response::HTTP_CREATED);
             return $user;
         } else {
+            return \FOS\RestBundle\View\View::create(['message' => 'Données du formulaire invalides.'], Response::HTTP_BAD_REQUEST);
             return $form;
         }
     }
 
 
-    private function sendUserCredentials($login, $password, $secretkey)
-    {
-        $message = \Swift_Message::newInstance()
-            ->setSubject('Création de compte Kodaizen note')
-            ->setFrom('contact@kodaizen.com')
-            ->setTo($login)
-            ->setBody(
-                $this->renderView(
-                // app/Resources/views/Emails/registration.html.twig
-                    'sendCredentials.html.twig',
-                    array('login' => $login, 'password' => $password, 'secretkey' => $secretkey)
-                ),
-                'text/html'
-            );
-        $this->get('mailer')->send($message);
-    }
+    //send a secret key to user
 
     /**
-     * @Rest\View()
-     * @Rest\Get("/users/testmail")
+     * @Rest\Post("/users/sendsecretkey")
      */
-    public function sendMailAction()
+    public function sendSecretKeyAction(Request $request)
     {
-        $this->sendUserCredentials('guillaume.cartie@gmail.com', 'toto', 'sidilarsen', 'kjferj');
+
+        $email = $request->get('email');
+        dump($email);
+        $user = $this->get('doctrine.orm.entity_manager')
+            ->getRepository('AppBundle:User')
+            ->findOneBy(array('email' => $email)); // L'identifiant en tant que paramètre n'est plus nécessaire
+        /* @var $user User */
+
+        if (empty($user)) {
+           // return $this->userNotFound();
+            return \FOS\RestBundle\View\View::create(['message' => 'Aucun compte n\'est associé à cette adresse email.'], Response::HTTP_NOT_FOUND);
+        }
+
+        $form = $this->createForm(UserType::class, $user, []);
+
+        $form->submit($request->request->all(), false);
+        if ($form->isValid()) {
+            $user->setActivationKey(uniqid('kdz'));
+
+            $this->sendUserCredentials(null,null, $user->getActivationKey());
+
+            $em = $this->get('doctrine.orm.entity_manager');
+            $em->persist($user);
+            $em->flush();
+            return \FOS\RestBundle\View\View::create(['message' => 'La clé secrète a bien été envoyée.'], Response::HTTP_CREATED);
+        } else {
+            return \FOS\RestBundle\View\View::create(['message' => 'Adresse email invalide.'], Response::HTTP_BAD_REQUEST);
+        }
+
     }
+
 
 
     //get all users
@@ -161,7 +176,7 @@ class UserController extends Controller
         // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
         if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
             // Sinon on déclenche une exception « Accès interdit »
-            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+            //  return \FOS\RestBundle\View\View::create(['message' => 'Droits insuffisants.'], Response::HTTP_FORBIDDEN);
         }
 
         $users = $this->get('doctrine.orm.entity_manager')
@@ -281,28 +296,59 @@ class UserController extends Controller
 
     /**
      * @Rest\View(statusCode=Response::HTTP_NO_CONTENT)
-     * @Rest\Delete("/users/{id}")
+     * @Rest\Delete("/users/{secretKey}")
      */
-    public function removeUserAction(Request $request)
+    public function removeUserAction($secretKey, Request $request)
     {
 
         // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
         if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
             // Sinon on déclenche une exception « Accès interdit »
-            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+            // return \FOS\RestBundle\View\View::create(['message' => 'Droits insuffisants.'], Response::HTTP_FORBIDDEN);
         }
 
         $em = $this->get('doctrine.orm.entity_manager');
         $user = $em->getRepository('AppBundle:User')
-            ->find($request->get('id'));
+            ->findOneBy(array('activationkey' => $secretKey));;
         /* @var $user User */
 
         if ($user) {
             $em->remove($user);
             $em->flush();
         }
+        else{
+            return \FOS\RestBundle\View\View::create(['message' => 'Clé de sécurité incorrecte.'], Response::HTTP_BAD_REQUEST);
+        }
     }
 
+
+    //FUNCTIONS
+
+    private function sendUserCredentials($login, $password, $secretkey)
+    {
+
+        if($login){
+            $subject = "Informations compte Kodaizen Note";
+            $data = array('login' => $login, 'password' => $password, 'secretkey' => $secretkey);
+        }
+        else {
+            $subject = "Clé secrète Kodaizen Note";
+            $data = array('secretkey' => $secretkey);
+        }
+        $message = \Swift_Message::newInstance()
+            ->setSubject($subject)
+            ->setFrom('contact@kodaizen.com')
+            ->setTo($login)
+            ->setBody(
+                $this->renderView(
+                // app/Resources/views/Emails/registration.html.twig
+                    'sendCredentials.html.twig',
+                    $data
+                ),
+                'text/html'
+            );
+        $this->get('mailer')->send($message);
+    }
 
     private function userNotFound()
     {
