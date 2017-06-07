@@ -58,7 +58,7 @@ class AuthTokenController extends Controller
             ->findOneByEmail($credentials->getLogin());
 
         if (!$user) { // L'utilisateur n'existe pas
-            return \FOS\RestBundle\View\View::create(['message' => 'Auncin compte n\'est associé à cette adresse.'], Response::HTTP_BAD_REQUEST);
+            return \FOS\RestBundle\View\View::create(['message' => 'Auncun compte n\'est associé à cette adresse.'], Response::HTTP_BAD_REQUEST);
             // return $this->invalidCredentials();
         }
 

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\AuthToken;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -131,35 +132,28 @@ class UserController extends Controller
      */
     public function sendSecretKeyAction(Request $request)
     {
-
-        $email = $request->get('email');
-        dump($email);
         $user = $this->get('doctrine.orm.entity_manager')
             ->getRepository('AppBundle:User')
-            ->findOneBy(array('email' => $email)); // L'identifiant en tant que paramètre n'est plus nécessaire
+            ->findOneBy(array('email' => $request->get('email')));
         /* @var $user User */
 
         if (empty($user)) {
-           // return $this->userNotFound();
             return \FOS\RestBundle\View\View::create(['message' => 'Aucun compte n\'est associé à cette adresse email.'], Response::HTTP_NOT_FOUND);
         }
-
         $form = $this->createForm(UserType::class, $user, []);
-
         $form->submit($request->request->all(), false);
         if ($form->isValid()) {
             $user->setActivationKey(uniqid('kdz'));
-
-            $this->sendUserCredentials(null,null, $user->getActivationKey());
-
             $em = $this->get('doctrine.orm.entity_manager');
             $em->persist($user);
             $em->flush();
-            return \FOS\RestBundle\View\View::create(['message' => 'La clé secrète a bien été envoyée.'], Response::HTTP_CREATED);
-        } else {
-            return \FOS\RestBundle\View\View::create(['message' => 'Adresse email invalide.'], Response::HTTP_BAD_REQUEST);
-        }
 
+            $this->sendSecretKey($user);
+            return \FOS\RestBundle\View\View::create(['message' => 'La clé secrète a bien été envoyée.'], Response::HTTP_CREATED);
+        }
+        else {
+            return \FOS\RestBundle\View\View::create(['message' => 'Erreur de validation.'], Response::HTTP_BAD_REQUEST);
+        }
     }
 
 
@@ -295,7 +289,7 @@ class UserController extends Controller
     //delete user
 
     /**
-     * @Rest\View(statusCode=Response::HTTP_NO_CONTENT)
+     * @Rest\View()
      * @Rest\Delete("/users/{secretKey}")
      */
     public function removeUserAction($secretKey, Request $request)
@@ -315,8 +309,8 @@ class UserController extends Controller
         if ($user) {
             $em->remove($user);
             $em->flush();
-        }
-        else{
+            return \FOS\RestBundle\View\View::create(['message' => 'Votre compte a bien été supprimé.'], Response::HTTP_NO_CONTENT);
+        } else {
             return \FOS\RestBundle\View\View::create(['message' => 'Clé de sécurité incorrecte.'], Response::HTTP_BAD_REQUEST);
         }
     }
@@ -327,17 +321,16 @@ class UserController extends Controller
     private function sendUserCredentials($login, $password, $secretkey)
     {
 
-        if($login){
+        if ($login) {
             $subject = "Informations compte Kodaizen Note";
             $data = array('login' => $login, 'password' => $password, 'secretkey' => $secretkey);
-        }
-        else {
+        } else {
             $subject = "Clé secrète Kodaizen Note";
             $data = array('secretkey' => $secretkey);
         }
         $message = \Swift_Message::newInstance()
             ->setSubject($subject)
-            ->setFrom('contact@kodaizen.com')
+            ->setFrom('no-reply@kodaizen.com')
             ->setTo($login)
             ->setBody(
                 $this->renderView(
@@ -350,7 +343,25 @@ class UserController extends Controller
         $this->get('mailer')->send($message);
     }
 
-    private function userNotFound()
+    private function sendSecretKey($user)
+    {
+        $message = \Swift_Message::newInstance()
+            ->setSubject('Clé secrète Kodaizen Note')
+            ->setFrom('no-reply@kodaizen.com')
+            ->setTo($user->getEmail())
+            ->setBody(
+                $this->renderView(
+                // app/Resources/views/Emails/unregistration.html.twig
+                    'Emails/unregistration.html.twig',
+                    array('secretkey' => $user->getActivationKey())
+                ),
+                'text/html'
+            );
+        $this->get('mailer')->send($message);
+    }
+
+    private
+    function userNotFound()
     {
         //return \FOS\RestBundle\View\View::create(['message' => 'User not found'], Response::HTTP_NOT_FOUND);
         throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('User not found');

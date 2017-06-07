@@ -5,19 +5,14 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>Envoie de clé secrète</title>
     <style>
 
     </style>
 </head>
 <body>
-<h3>Identifiants application Kodaizen note</h3>
 <div class="box">
-    {% if login is defined %}
-    <p><b>Login: </b>{{ login }}</p>
-    <p><b>Mot de passe: </b>{{ password }}</p>
-    {% endif %}
-    <p><b>Clé d'activation: </b>{{ secretkey }}</p>
+    <p><b>Clé secrète: </b>{{ secretkey }}</p>
 </div>
 
 </body>
