@@ -11,8 +11,7 @@ class ValidationType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
-        $builder->add('login');
-        $builder->add('activationkey');
+        $builder->add('secretkey');
     }
 
     public function configureOptions(OptionsResolver $resolver)

@@ -32,14 +32,14 @@ class UserController extends Controller
         $form->submit($request->request->all()); // Validation des données
 
         if ($form->isValid()) {
-            $email = $request->get('login');
+            $secretkey = $request->get('secretkey');
             $user = $this->get('doctrine.orm.entity_manager')
                 ->getRepository('AppBundle:User')
-                ->findOneBy(array('email' => $email));
+                ->findOneBy(array('secretkey' => $secretkey));
             /* @var $user User */
 
             if (empty($user)) {
-                return \FOS\RestBundle\View\View::create(['message' => 'Aucun compte n\'est associé à cette adresse email.'], Response::HTTP_NOT_FOUND);
+                return \FOS\RestBundle\View\View::create(['message' => 'Aucun compte n\'est associé à cette clé secrète.'], Response::HTTP_NOT_FOUND);
             }
             if ($user->getActive()) {
                 return \FOS\RestBundle\View\View::create([
@@ -47,11 +47,9 @@ class UserController extends Controller
                     'message' => 'Votre compte est déjà activé.'
                 ], Response::HTTP_BAD_REQUEST);
             }
-            $activationkey = $user->getActivationKey();
 
-            if ($request->get('activationkey') === $activationkey) {
                 $user->setActive(true);
-                $user->setActivationKey(null);
+                $user->setSecretKey(null);
                 $em = $this->get('doctrine.orm.entity_manager');
                 $em->persist($user);
                 $em->flush();
@@ -59,9 +57,7 @@ class UserController extends Controller
                     'user' => $user,
                     'message' => 'Votre compte a bien été activé.'
                 ], Response::HTTP_OK);
-            } else {
-                return \FOS\RestBundle\View\View::create(['message' => 'Clé d\'activation invalide.'], Response::HTTP_BAD_REQUEST);
-            }
+
 
         } else {
             return $form;
@@ -109,11 +105,11 @@ class UserController extends Controller
             $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
             $user->setPassword($encoded);
             $activationkey = uniqid('kdz');
-            $user->setActivationKey($activationkey);
+            $user->setSecretKey($activationkey);
             $em = $this->get('doctrine.orm.entity_manager');
             $em->persist($user);
             $em->flush();
-            $this->sendUserCredentials($user->getEmail(), $user->getPlainPassword(), $user->getActivationKey());
+            $this->sendUserCredentials($user->getEmail(), $user->getPlainPassword(), $user->getSecretKey());
 
 
             return \FOS\RestBundle\View\View::create(['message' => 'Votre compte a bien été créé, vous devez maintenant l\'activer.'], Response::HTTP_CREATED);
@@ -143,7 +139,7 @@ class UserController extends Controller
         $form = $this->createForm(UserType::class, $user, []);
         $form->submit($request->request->all(), false);
         if ($form->isValid()) {
-            $user->setActivationKey(uniqid('kdz'));
+            $user->setSecretKey(uniqid('kdz'));
             $em = $this->get('doctrine.orm.entity_manager');
             $em->persist($user);
             $em->flush();
@@ -220,7 +216,6 @@ class UserController extends Controller
 
         // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
         if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
-            // Sinon on déclenche une exception « Accès interdit »
             return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
         }
 

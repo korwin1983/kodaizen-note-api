@@ -6,35 +6,20 @@ use Symfony\Component\Validator\Constraints as Assert;
 class Validation
 {
 
-    /**
-     * @var string
-     * @Assert\NotBlank()
-     */
-    protected $login;
 
     /**
      * @var string
      * @Assert\NotBlank()
      */
-    protected $activationkey;
+    protected $secretkey;
 
-    public function getLogin()
+    public function getSecretKey()
     {
-        return $this->login;
+        return $this->secretkey;
     }
 
-    public function setLogin($login)
+    public function setSecretKey($secretkey)
     {
-        $this->login = $login;
-    }
-
-    public function getActivationkey()
-    {
-        return $this->activationkey;
-    }
-
-    public function setActivationkey($activationkey)
-    {
-        $this->activationkey = $activationkey;
+        $this->secretkey = $secretkey;
     }
 }

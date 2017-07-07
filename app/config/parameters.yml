@@ -11,5 +11,5 @@ parameters:
     mailer_host: ns0.ovh.net
     mailer_port: 587
     mailer_user: contact@kodaizen.com
-    mailer_password: kdzsidilarsen
+    mailer_password: kodaizen1983
     secret: sidilarsen

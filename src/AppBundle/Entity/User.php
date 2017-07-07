@@ -107,10 +107,10 @@ class User implements UserInterface
     /**
      * @var string
      *
-     * @ORM\Column(type="string", name="activationkey", nullable=true)
+     * @ORM\Column(type="string", name="secretkey", nullable=true)
      *
      */
-    protected $activationkey;
+    protected $secretkey;
 
 
     /**
@@ -292,14 +292,14 @@ class User implements UserInterface
         $this->active = $active;
     }
 
-    public function getActivationKey()
+    public function getSecretKey()
     {
-        return $this->activationkey;
+        return $this->secretkey;
     }
 
-    public function setActivationKey($activationkey)
+    public function setSecretKey($secretkey)
     {
-        $this->activationkey = $activationkey;
+        $this->secretkey = $secretkey;
     }
 
 
