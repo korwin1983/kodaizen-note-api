@@ -11,7 +11,7 @@ class UpdateUserType extends AbstractType
 {
 	public function buildForm(FormBuilderInterface $builder, array $options)
 	{
-        $builder->add('activationkey');
+        $builder->add('secretkey');
 		$builder->add('firstname');
 		$builder->add('lastname');
         $builder->add('plainPassword'); // Rajout du mot de passe

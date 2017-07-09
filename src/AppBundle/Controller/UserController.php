@@ -11,6 +11,7 @@ use AppBundle\Entity\Validation;
 use FOS\RestBundle\View\View; // utilisation de la vue de FOSRestBundle
 use FOS\RestBundle\Controller\Annotations as Rest; //annotations pour FOSRestBundle
 use AppBundle\Form\Type\UserType;
+use AppBundle\Form\Type\UpdateUserType;
 use AppBundle\Form\Type\ValidationType;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -29,7 +30,7 @@ class UserController extends Controller
         $validation = new Validation();
 
         $form = $this->createForm(ValidationType::class, $validation);
-        $form->submit($request->request->all()); // Validation des données
+        $form->submit($request->request->all());
 
         if ($form->isValid()) {
             $secretkey = $request->get('secretkey');
@@ -81,7 +82,6 @@ class UserController extends Controller
         $form = $this->createForm(UserType::class, $user);
 
         $form->submit($request->request->all()); // Validation des données
-
 
         $email = $user->getEmail();
         $existingUser = $this->get('doctrine.orm.entity_manager')
@@ -201,77 +201,66 @@ class UserController extends Controller
         if (empty($user)) {
             return $this->userNotFound();
         }
-
         return $user;
-
     }
 
 
     /**
      * @Rest\View(serializerGroups={"user"})
-     * @Rest\Put("/users/{id}")
+     * @Rest\Put("/users/{secretKey}")
      */
-    public function updateUserAction(Request $request)
+    public function updateUserAction(Request $request, $secretKey)
     {
 
         // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
-        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
-            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
-        }
-
-        return $this->updateUser($request, true);
+//        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+//            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+//        }
+        return $this->updateUser($request, true, $secretKey);
     }
 
     /**
      * @Rest\View(serializerGroups={"user"})
-     * @Rest\Patch("/users/{id}")
+     * @Rest\Patch("/users/{secretKey}")
      */
-    public function patchUserAction(Request $request)
+    public function patchUserAction($secretKey, Request $request)
     {
-
-        // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
-        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
-            // Sinon on déclenche une exception « Accès interdit »
-            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
-        }
-
-        return $this->updateUser($request, false);
+//        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+//            return \FOS\RestBundle\View\View::create(['message' => 'Invalid access rights'], Response::HTTP_FORBIDDEN);
+//        }
+        return $this->updateUser($request, false, $secretKey);
     }
 
 
-    private function updateUser(Request $request, $clearMissing)
+    private function updateUser(Request $request, $clearMissing, $secretKey)
     {
         $user = $this->get('doctrine.orm.entity_manager')
             ->getRepository('AppBundle:User')
-            ->find($request->get('id')); // L'identifiant en tant que paramètre n'est plus nécessaire
+            ->findOneBy(array('secretkey' => $secretKey));
         /* @var $user User */
 
         if (empty($user)) {
-            return $this->userNotFound();
+            return \FOS\RestBundle\View\View::create(['message' => 'Clé de sécurité incorrecte.'], Response::HTTP_BAD_REQUEST);
         }
 
-        if ($clearMissing) { // Si une mise à jour complète, le mot de passe doit être validé
+        if ($clearMissing) {
             $options = ['validation_groups' => ['Default', 'FullUpdate']];
         } else {
-            $options = []; // Le groupe de validation par défaut de Symfony est Default
+            $options = [];
         }
 
-        $form = $this->createForm(UserType::class, $user, $options);
+        $form = $this->createForm(UpdateUserType::class, $user, $options);
 
         $form->submit($request->request->all(), $clearMissing);
 
         if ($form->isValid()) {
-
-            // Si l'utilisateur veut changer son mot de passe
             if (!empty($user->getPlainPassword())) {
                 $encoder = $this->get('security.password_encoder');
                 $encoded = $encoder->encodePassword($user, $user->getPlainPassword());
                 $user->setPassword($encoded);
             }
-
+            $user->setSecretKey(null);
             $em = $this->get('doctrine.orm.entity_manager');
-            // l'entité vient de la base, donc le merge n'est pas nécessaire.
-            // il est utilisé juste par soucis de clarté
             $em->merge($user);
             $em->flush();
             return $user;
@@ -291,14 +280,14 @@ class UserController extends Controller
     {
 
         // On vérifie que l'utilisateur dispose bien du rôle ROLE_ADMIN
-        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
+//        if (!$this->get('security.authorization_checker')->isGranted('ROLE_ADMIN')) {
             // Sinon on déclenche une exception « Accès interdit »
             // return \FOS\RestBundle\View\View::create(['message' => 'Droits insuffisants.'], Response::HTTP_FORBIDDEN);
-        }
+//        }
 
         $em = $this->get('doctrine.orm.entity_manager');
         $user = $em->getRepository('AppBundle:User')
-            ->findOneBy(array('activationkey' => $secretKey));;
+            ->findOneBy(array('secretkey' => $secretKey));
         /* @var $user User */
 
         if ($user) {
@@ -348,7 +337,7 @@ class UserController extends Controller
                 $this->renderView(
                 // app/Resources/views/Emails/unregistration.html.twig
                     'Emails/unregistration.html.twig',
-                    array('secretkey' => $user->getActivationKey())
+                    array('secretkey' => $user->getSecretKey())
                 ),
                 'text/html'
             );
